@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Auto Key System</title>
+<title>Auto Key</title>
 
 <style>
   .dp-key-widget {
@@ -14,45 +15,34 @@
     text-align: center;
     max-width: 100%;
     margin: 20px auto;
-    font-family: 'Segoe UI', Tahoma, sans-serif;
+    font-family: Segoe UI, sans-serif;
     box-shadow: 0 4px 15px rgba(0,0,0,0.4);
     color: #e2e8f0;
   }
-  .dp-key-widget h3 {
-    margin: 0 0 10px 0;
-    color: #00ffcc;
-    font-size: 1.3rem;
-  }
-  .dp-status {
-    font-size: 0.9rem;
-    color: #94a3b8;
-    margin-bottom: 15px;
-  }
+
   .dp-key-box {
     background: #0f172a;
     border: 2px dashed #00ffcc;
-    color: #fff;
-    font-family: 'Courier New', monospace;
-    font-size: 1.5rem;
-    font-weight: bold;
+    color: white;
+    font-family: Courier New, monospace;
+    font-size: 1.6rem;
     padding: 15px;
     margin-bottom: 20px;
     border-radius: 8px;
-    word-break: break-all;
-    min-height: 40px;
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
+    min-height: 40px;
   }
+
   .dp-btn {
-    background-color: #00ffcc;
+    background: #00ffcc;
     color: #0f172a;
-    border: none;
     padding: 10px 30px;
-    font-size: 1rem;
-    font-weight: bold;
     border-radius: 50px;
+    border: none;
     cursor: pointer;
+    font-weight: bold;
   }
 </style>
 </head>
@@ -61,75 +51,42 @@
 
 <div class="dp-key-widget">
   <h3>Your Key</h3>
-  <p class="dp-status">Auto-Detect System</p>
-
   <div class="dp-key-box" id="finalKeyDisplay">Scanning...</div>
   <button class="dp-btn" onclick="copyMyKey(this)">Copy Key</button>
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+// Option A: Only the last part of URL is the key
+document.addEventListener("DOMContentLoaded", () => {
   const box = document.getElementById("finalKeyDisplay");
-  const ignored = ["m", "utm_source", "zx", "commentPage"];
-  let key = null;
 
-  const url = window.location.href;
-  const params = new URLSearchParams(window.location.search);
-  const hash = window.location.hash;
-  const path = window.location.pathname.split("/").filter(Boolean);
+  // Split URL path and get last segment
+  const parts = window.location.pathname.split("/").filter(Boolean);
+  let key = parts[parts.length - 1];
 
-  // 1. ?key=VALUE
-  if (params.has("key")) {
-    key = params.get("key");
-  }
-
-  // 2. ?VALUE
-  if (!key) {
-    for (const [name] of params.entries()) {
-      if (!ignored.includes(name)) {
-        key = name;
-        break;
-      }
-    }
-  }
-
-  // 3. #VALUE
-  if (!key && hash.length > 1) {
-    key = hash.substring(1);
-  }
-
-  // 4. /path/VALUE (auto-detect last path segment)
-  if (!key && path.length > 0) {
-    key = path[path.length - 1];
-  }
-
-  // Clean
-  if (key) {
-    try { key = decodeURIComponent(key); } catch(e) {}
-  }
-
-  // Display
-  if (key && key !== "" && key !== "get") {
-    box.textContent = key;
-    box.style.color = "#ffffff";
-    box.style.borderColor = "#00ffcc";
-  } else {
+  // If the last part is "get", then no key was provided
+  if (!key || key.toLowerCase() === "get") {
     box.textContent = "NO KEY FOUND";
-    box.style.color = "#ff4d4d";
-    box.style.borderColor = "#ff4d4d";
+    box.style.color = "red";
+    return;
   }
+
+  box.textContent = key;
 });
 
+// Copy key
 function copyMyKey(btn) {
-  const text = document.getElementById("finalKeyDisplay").textContent;
-  if (text && text !== "NO KEY FOUND" && text !== "Scanning...") {
-    navigator.clipboard.writeText(text).then(() => {
-      btn.textContent = "Copied!";
-      setTimeout(() => btn.textContent = "Copy Key", 1500);
-    });
-  } else {
+  const value = document.getElementById("finalKeyDisplay").textContent;
+
+  if (value === "NO KEY FOUND") {
     alert("No key found.");
+    return;
   }
+
+  navigator.clipboard.writeText(value).then(() => {
+    btn.textContent = "Copied!";
+    setTimeout(() => btn.textContent = "Copy Key", 1500);
+  });
 }
 </script>
 
