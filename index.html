@@ -1,94 +1,79 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Auto Key</title>
-
-<style>
-  .dp-key-widget {
-    background-color: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 12px;
-    padding: 25px;
-    text-align: center;
-    max-width: 100%;
-    margin: 20px auto;
-    font-family: Segoe UI, sans-serif;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-    color: #e2e8f0;
-  }
-
-  .dp-key-box {
-    background: #0f172a;
-    border: 2px dashed #00ffcc;
-    color: white;
-    font-family: Courier New, monospace;
-    font-size: 1.6rem;
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 8px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 40px;
-  }
-
-  .dp-btn {
-    background: #00ffcc;
-    color: #0f172a;
-    padding: 10px 30px;
-    border-radius: 50px;
-    border: none;
-    cursor: pointer;
-    font-weight: bold;
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Key Display</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f172a; display: flex; justify-content: center; padding: 40px 16px; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 25px; text-align: center; max-width: 480px; width: 100%; color: #e2e8f0; }
+    .card h3 { color: #00ffcc; text-transform: uppercase; letter-spacing: 1px; font-size: 1.2rem; margin-bottom: 6px; }
+    .status { font-size: 0.85rem; color: #94a3b8; margin-bottom: 16px; }
+    .key-box { background: #0f172a; border: 2px dashed #00ffcc; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 1.5rem; font-weight: bold; padding: 16px; margin-bottom: 20px; min-height: 56px; display: flex; align-items: center; justify-content: center; word-break: break-all; color: #fff; }
+    .key-box.error { border-color: #ff4d4d; color: #ff4d4d; }
+    button { background: #00ffcc; color: #0f172a; border: none; padding: 10px 32px; font-size: 1rem; font-weight: bold; border-radius: 50px; cursor: pointer; transition: 0.2s; }
+    button:hover { background: #fff; }
+  </style>
 </head>
-
 <body>
-
-<div class="dp-key-widget">
-  <h3>Your Key</h3>
-  <div class="dp-key-box" id="finalKeyDisplay">Scanning...</div>
-  <button class="dp-btn" onclick="copyMyKey(this)">Copy Key</button>
+<div class="card">
+  <h3>Get Your Key</h3>
+  <p class="status" id="status">Scanning...</p>
+  <div class="key-box" id="display">—</div>
+  <button onclick="copyKey()">Copy Key</button>
 </div>
 
 <script>
-// Option A: Only the last part of URL is the key
-document.addEventListener("DOMContentLoaded", () => {
-  const box = document.getElementById("finalKeyDisplay");
+(function() {
+  var IGNORED = ['m','commentPage','zx','utm_source','utm_medium','utm_campaign','ref'];
+  var display = document.getElementById('display');
+  var status  = document.getElementById('status');
 
-  // Split URL path and get last segment
-  const parts = window.location.pathname.split("/").filter(Boolean);
-  let key = parts[parts.length - 1];
-
-  // If the last part is "get", then no key was provided
-  if (!key || key.toLowerCase() === "get") {
-    box.textContent = "NO KEY FOUND";
-    box.style.color = "red";
-    return;
+  function detect() {
+    var search = window.location.search;
+    var hash   = window.location.hash;
+    if (search) {
+      var params = new URLSearchParams(search);
+      if (params.has('key')) return params.get('key');
+      for (var pair of params.entries()) {
+        if (!IGNORED.includes(pair[0])) return pair[1] !== '' ? pair[1] : pair[0];
+      }
+    }
+    if (hash && hash.length > 1) return decodeURIComponent(hash.slice(1));
+    return null;
   }
 
-  box.textContent = key;
-});
-
-// Copy key
-function copyMyKey(btn) {
-  const value = document.getElementById("finalKeyDisplay").textContent;
-
-  if (value === "NO KEY FOUND") {
-    alert("No key found.");
-    return;
+  try {
+    var key = detect();
+    if (key) {
+      display.textContent = decodeURIComponent(key);
+      status.textContent  = 'System Status: Ready';
+    } else {
+      display.textContent = 'NO KEY FOUND';
+      display.className   = 'key-box error';
+      status.textContent  = 'No key detected in URL';
+    }
+  } catch(e) {
+    display.textContent = 'ERROR';
+    display.className   = 'key-box error';
   }
 
-  navigator.clipboard.writeText(value).then(() => {
-    btn.textContent = "Copied!";
-    setTimeout(() => btn.textContent = "Copy Key", 1500);
-  });
-}
+  window.copyKey = function() {
+    var txt = display.textContent;
+    if (display.classList.contains('error')) return;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(txt);
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = txt; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+    }
+    event.target.textContent = 'Copied!';
+    setTimeout(function(){ event.target.textContent = 'Copy Key'; }, 2000);
+  };
+})();
 </script>
-
 </body>
 </html>
