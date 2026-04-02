@@ -1,0 +1,120 @@
+<style>
+  .dp-key-widget {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    max-width: 100%;
+    margin: 20px auto;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    color: #e2e8f0;
+  }
+  .dp-key-widget h3 {
+    margin: 0 0 10px 0;
+    color: #00ffcc;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 1.3rem;
+  }
+  .dp-status {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    margin-bottom: 15px;
+  }
+  .dp-key-box {
+    background: #0f172a;
+    border: 2px dashed #00ffcc;
+    color: #fff;
+    font-family: 'Courier New', monospace;
+    font-size: 1.6rem;
+    font-weight: bold;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    word-break: break-all;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .dp-btn {
+    background-color: #00ffcc;
+    color: #0f172a;
+    border: none;
+    padding: 10px 30px;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  .dp-btn:hover {
+    background-color: #ffffff;
+    box-shadow: 0 0 15px rgba(0, 255, 204, 0.5);
+  }
+</style>
+
+<div class="dp-key-widget">
+  <h3>Get Your Key</h3>
+  <p class="dp-status">System Status: Ready</p>
+  
+  <div class="dp-key-box" id="finalKeyDisplay">Scanning...</div>
+  <button class="dp-btn" onclick="copyMyKey(this)">Copy Key</button>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  const ignored = ['m', 'commentPage', 'zx', 'utm_source'];
+  const box = document.getElementById("finalKeyDisplay");
+  let key = null;
+
+  const params = new URLSearchParams(window.location.search);
+
+  // 1. ?key=VALUE
+  if (params.has("key")) {
+    key = params.get("key");
+  }
+
+  // 2. ?VALUE (parameter itself is the key)
+  if (!key) {
+    for (const [name] of params.entries()) {
+      if (!ignored.includes(name)) {
+        key = name;
+        break;
+      }
+    }
+  }
+
+  // 3. #VALUE
+  if (!key && window.location.hash.length > 1) {
+    key = window.location.hash.slice(1);
+  }
+
+  // Final Display
+  if (key) {
+    try { key = decodeURIComponent(key); } catch (e) {}
+    box.textContent = key;
+    box.style.color = "#ffffff";
+    box.style.borderColor = "#00ffcc";
+  } else {
+    box.textContent = "NO KEY FOUND";
+    box.style.color = "#ff4d4d";
+    box.style.borderColor = "#ff4d4d";
+  }
+});
+
+function copyMyKey(btn) {
+  const val = document.getElementById("finalKeyDisplay").textContent;
+  if (val && val !== "NO KEY FOUND" && val !== "Scanning...") {
+    navigator.clipboard.writeText(val).then(() => {
+      btn.textContent = "Copied!";
+      setTimeout(() => btn.textContent = "Copy Key", 2000);
+    });
+  } else {
+    alert("No key found to copy.");
+  }
+}
+</script>
